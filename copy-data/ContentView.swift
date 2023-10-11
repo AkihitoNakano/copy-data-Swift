@@ -14,7 +14,7 @@ struct CopyBlockView: View {
   var blockName: String
   
   @State private var status: BlockStatus = BlockStatus(text: "", color: Color.gray)
-
+  
   var bgColor: Color {
     self.cpVM.canSelected(block: self.blockName) ? Color.red : Color.gray
   }
@@ -34,9 +34,11 @@ struct CopyBlockView: View {
     .onTapGesture {
       cpVM.isSelectedCopy = self.blockName
     }
-    .onChange(of: cpVM.copyData) { newStatus in
-      if self.cpVM.isSelectedCopy == self.blockName, let unwrappedStatus = newStatus {
+    .onChange(of: cpVM.didCompleteCopy) { didCopy in
+      if didCopy && cpVM.isSelectedCopy == self.blockName, let unwrappedStatus = cpVM.copyData {
         self.status = unwrappedStatus
+        cpVM.didCompleteCopy = false
+        cpVM.isSelectedCopy = nil
       }
     }
   }
@@ -63,33 +65,33 @@ struct BlockView: View {
     .frame(width: 100, height: 100)
     .onTapGesture {
       if let _ = cpVM.isSelectedCopy {
-        cpVM.copyData = self.status
+        cpVM.copy(blockStatus: self.status)
       }
     }
   }
-    
+  
 }
 
 struct ContentView: View {
-    var cpVM = CopyViewModel()
+  var cpVM = CopyViewModel()
   
-    var body: some View {
-        VStack {
-          HStack {
-            CopyBlockView(cpVM: cpVM, blockName: "copy1")
-            CopyBlockView(cpVM: cpVM, blockName: "copy2")
-          }
-          HStack {
-            BlockView(cpVM: cpVM ,status: BlockStatus(text: "A", color: Color.green))
-            BlockView(cpVM: cpVM , status: BlockStatus(text: "B", color: Color.blue))
-          }
-        }
-        .padding()
+  var body: some View {
+    VStack {
+      HStack {
+        CopyBlockView(cpVM: cpVM, blockName: "copy1")
+        CopyBlockView(cpVM: cpVM, blockName: "copy2")
+      }
+      HStack {
+        BlockView(cpVM: cpVM ,status: BlockStatus(text: "A", color: Color.green))
+        BlockView(cpVM: cpVM , status: BlockStatus(text: "B", color: Color.blue))
+      }
     }
+    .padding()
+  }
 }
 
 struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        ContentView()
-    }
+  static var previews: some View {
+    ContentView()
+  }
 }
